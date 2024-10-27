@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 class MovieDetailViewController: UIViewController {
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -119,6 +120,32 @@ class MovieDetailViewController: UIViewController {
         return label
     }()
     
+    private let ratingsStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.axis = .vertical
+        stackView.spacing = 16
+        stackView.alignment = .leading
+        return stackView
+    }()
+    
+    private let horizontalRatingsStack: UIStackView = {
+        let stackView = UIStackView()
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.axis = .horizontal
+        stackView.distribution = .equalSpacing
+        stackView.alignment = .center
+        return stackView
+    }()
+    
+    private let ratingsTitleLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Ratings"
+        label.font = .systemFont(ofSize: 20, weight: .bold)
+        return label
+    }()
+    
     private var movie: Movie
     
     init(movie: Movie) {
@@ -154,6 +181,9 @@ class MovieDetailViewController: UIViewController {
         contentView.addSubview(castLabel)
         contentView.addSubview(directorsTitleLabel)
         contentView.addSubview(directorsLabel)
+        contentView.addSubview(ratingsStackView)
+        ratingsStackView.addArrangedSubview(ratingsTitleLabel)
+        ratingsStackView.addArrangedSubview(horizontalRatingsStack)
         
         setupConstraints()
     }
@@ -233,7 +263,12 @@ class MovieDetailViewController: UIViewController {
             directorsLabel.topAnchor.constraint(equalTo: directorsTitleLabel.bottomAnchor, constant: 8),
             directorsLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             directorsLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            directorsLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16)
+            
+            
+            ratingsStackView.topAnchor.constraint(equalTo: directorsLabel.bottomAnchor, constant: 24),
+            ratingsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            ratingsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            ratingsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
         ])
     }
     
@@ -245,6 +280,7 @@ class MovieDetailViewController: UIViewController {
         castLabel.text = movie.actors
         directorsLabel.text = movie.director
         loadImage(from: movie.poster)
+        setupRatings()
     }
     
     private func loadImage(from urlString: String) {
@@ -258,4 +294,52 @@ class MovieDetailViewController: UIViewController {
             }
         }
     }
+    
+    private func setupRatings() {
+            // Clear existing ratings first
+            horizontalRatingsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            horizontalRatingsStack.spacing = 16
+            horizontalRatingsStack.distribution = .equalSpacing
+            horizontalRatingsStack.alignment = .center
+            // Convert Movie ratings to RatingDetails
+            let ratingViews = movie.ratings.map { rating -> RatingDetails in
+                // Convert rating Value (e.g., "8.5/10" or "85%") to percentage
+                let percentage = convertRatingToPercentage(rating.value)
+                return RatingDetails(title: rating.source, percentage: percentage)
+            }
+            
+            // Add each rating view
+            ratingViews.forEach { ratingDetails in
+                let hostingController = UIHostingController(rootView:
+                    RatingView(rating: ratingDetails)
+                        .frame(width: 100, height: 140) // Adjust size as needed
+                        .preferredColorScheme(.dark)
+                )
+                hostingController.view.backgroundColor = .clear
+                
+                // Add the hosting controller as a child
+                addChild(hostingController)
+                horizontalRatingsStack.addArrangedSubview(hostingController.view)
+                hostingController.didMove(toParent: self)
+            }
+        }
+        
+        private func convertRatingToPercentage(_ ratingString: String) -> Double {
+            // Handle different rating formats
+            if ratingString.contains("/") {
+                // Format: "8.5/10"
+                let components = ratingString.split(separator: "/")
+                if let rating = Double(components[0]),
+                   let total = Double(components[1]) {
+                    return (rating / total) * 100
+                }
+            } else if ratingString.hasSuffix("%") {
+                // Format: "85%"
+                let numberString = ratingString.dropLast()
+                if let percentage = Double(numberString) {
+                    return percentage
+                }
+            }
+            return 0.0
+        }
 }

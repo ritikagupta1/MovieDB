@@ -15,7 +15,7 @@ struct RatingView: View {
     let rating: RatingDetails
     
     var body: some View {
-        VStack {
+        VStack(spacing: 8) {
             ZStack {
                 Circle()
                     .stroke(Color.white.opacity(0.5), lineWidth: 6)
@@ -29,13 +29,16 @@ struct RatingView: View {
                 
                 Text(String(format: "%.1f%%", rating.percentage))
             }
-               
+            .frame(height: 100)
             Text(rating.title)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(.white)
+                .font(.system(size: 14))
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+                .lineLimit(2)
                 .multilineTextAlignment(.center)
-        }
+                .frame(width: 100, height: 40) // Fixed height for text
+                .minimumScaleFactor(0.8)
+        }.frame(width: 100, height: 140)
          
     }
 }

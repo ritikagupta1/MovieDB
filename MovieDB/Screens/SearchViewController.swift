@@ -6,7 +6,7 @@
 //
 
 import UIKit
-class SearchViewController: UIViewController {
+class SearchViewController: UIViewController, UISearchBarDelegate {
     func moviesFetched() {
         self.tableView.reloadData()
     }
@@ -16,6 +16,7 @@ class SearchViewController: UIViewController {
         let tableView = UITableView()
         tableView.register(OptionCell.self, forCellReuseIdentifier: OptionCell.identifier)
         tableView.register(MovieCollectionTableCell.self, forCellReuseIdentifier: MovieCollectionTableCell.identifier)
+        tableView.register(SearchResultCell.self, forCellReuseIdentifier: SearchResultCell.identifier)
         return tableView
     }()
     
@@ -43,10 +44,9 @@ class SearchViewController: UIViewController {
         let searchController = UISearchController()
         searchController.searchResultsUpdater = self
         searchController.searchBar.placeholder = Constants.searchBarPlaceHolder
-        //        searchController.searchBar.delegate = self
+        searchController.searchBar.delegate = self
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
-        //        searchController.obscuresBackgroundDuringPresentation = true // default is false for ios 15+
     }
     
     
@@ -61,16 +61,25 @@ class SearchViewController: UIViewController {
 
 extension SearchViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-        
+        guard let query = searchController.searchBar.text else { return }
+        viewModel.updateSearchResults(with: query)
+        tableView.reloadData()
     }
 }
 
 extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
     func numberOfSections(in tableView: UITableView) -> Int {
-        viewModel.sections.count
+        viewModel.numberOfSections()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if viewModel.isSearchActive {
+            let cell = tableView.dequeueReusableCell(withIdentifier: SearchResultCell.identifier, for: indexPath) as? SearchResultCell
+            let movie = viewModel.searchResults[indexPath.row]
+            cell?.configure(with: movie)
+            return cell ?? UITableViewCell()
+        }
+        
         let section = viewModel.sections[indexPath.section]
         
         if indexPath.section == Sections.allMovies.rawValue {
@@ -80,6 +89,7 @@ extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
                 return cell ?? UITableViewCell()
             } else {
                 let cell = tableView.dequeueReusableCell(withIdentifier: MovieCollectionTableCell.identifier, for: indexPath) as? MovieCollectionTableCell
+                cell?.delegate = self
                 cell?.configure(with: viewModel.movies ?? [])
                 return cell ?? UITableViewCell()
             }
@@ -104,6 +114,7 @@ extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
             if option.isExpanded {
                 if indexPath.row == currentRow {
                     let cell = tableView.dequeueReusableCell(withIdentifier: MovieCollectionTableCell.identifier, for: indexPath) as? MovieCollectionTableCell
+                    cell?.delegate = self
                     cell?.configure(with: option.movieOptions)
                     return cell ?? UITableViewCell()
                 }
@@ -122,6 +133,12 @@ extension SearchViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if viewModel.isSearchActive {
+            let movie = viewModel.searchResults[indexPath.row]
+            let detailVC = MovieDetailViewController(movie: movie)
+            self.navigationController?.pushViewController(detailVC, animated: true)
+            return
+        }
         if indexPath.row == 0 {
             viewModel.sections[indexPath.section].isExpanded.toggle()
             tableView.reloadSections(IndexSet(integer: indexPath.section), with: .automatic)
@@ -150,5 +167,12 @@ extension SearchViewController: SearchViewModelDelegate {
     
     func didUpdateSection(_ section: Int) {
         tableView.reloadSections(IndexSet(integer: section), with: .automatic)
+    }
+}
+
+extension SearchViewController: MovieCollectionTableCellDelegate {
+    func didSelectMovie(movie: Movie) {
+        let detailVC = MovieDetailViewController(movie: movie)
+        self.navigationController?.pushViewController(detailVC, animated: true)
     }
 }

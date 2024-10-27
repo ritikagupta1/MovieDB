@@ -15,12 +15,16 @@ protocol SearchViewModelProtocol: AnyObject {
     var movies: [Movie]? { get }
     var sections: [ExpandableOption] { get }
     var delegate: SearchViewModelDelegate? { get set }
+    var searchResults: [Movie] { get}
+    var isSearchActive: Bool { get }
     
     func loadMovies()
     func toggleSectionExpansion(at index: Int)
     func toggleOptionExpansion(sectionIndex: Int, optionIndex: Int)
+    func numberOfSections() -> Int
     func numberOfRows(in section: Int) -> Int
     func heightForRow(at indexPath: IndexPath) -> CGFloat
+    func updateSearchResults(with query: String)
 }
 
 class SearchViewModel: SearchViewModelProtocol {
@@ -31,7 +35,25 @@ class SearchViewModel: SearchViewModelProtocol {
     private var directorMovies: [String: [Movie]] = [:]
     private var actorsMovies: [String: [Movie]] = [:]
     
+    private(set) var isSearchActive: Bool = false
+    private(set) var searchResults: [Movie] = []
+    
     weak var delegate: SearchViewModelDelegate?
+    
+    func updateSearchResults(with query: String) {
+        isSearchActive = !query.isEmpty
+        if isSearchActive {
+            searchResults = (movies ?? []).filter { movie in
+                movie.title.lowercased().contains(query.lowercased()) ||
+                movie.genreCollection.contains{ $0.lowercased().contains(query.lowercased()) } ||
+                movie.actorCollection.contains { $0.lowercased().contains(query.lowercased()) } ||
+                movie.directorCollection.contains { $0.lowercased().contains(query.lowercased()) }
+            }
+        } else {
+            searchResults = []
+        }
+    }
+    
     
     func loadMovies() {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -66,7 +88,7 @@ class SearchViewModel: SearchViewModelProtocol {
         }
     }
     
-    func groupMovies() {
+    private func groupMovies() {
         guard let movies = self.movies else {
             print("Movies not present")
             return
@@ -127,7 +149,7 @@ class SearchViewModel: SearchViewModelProtocol {
             case .actor:
                 options = self.actorsMovies.map({ ExpandableSubOption(title: $0.key, options: $0.value) }).sorted(by: { $0.title < $1.title })
             case .allMovies:
-                options = []
+                break
             }
             return ExpandableOption(title: section.title, subOptions: options) }
         delegate?.moviesDidFetch()
@@ -143,7 +165,18 @@ class SearchViewModel: SearchViewModelProtocol {
         delegate?.didUpdateSection(sectionIndex)
     }
     
+    func numberOfSections() -> Int {
+        if isSearchActive {
+            return 1
+        }
+        return sections.count
+    }
+    
     func numberOfRows(in section: Int) -> Int {
+        if isSearchActive {
+            return searchResults.count
+        }
+        
         guard !sections.isEmpty else { return 0 }
         let currentSection = sections[section]
         
@@ -161,6 +194,10 @@ class SearchViewModel: SearchViewModelProtocol {
     }
     
     func heightForRow(at indexPath: IndexPath) -> CGFloat {
+        if isSearchActive {
+            return 180
+        }
+        
         let section = sections[indexPath.section]
         
         if indexPath.row == 0 {

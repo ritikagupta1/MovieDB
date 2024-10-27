@@ -6,9 +6,14 @@
 //
 
 import UIKit
+protocol MovieCollectionTableCellDelegate: AnyObject {
+    func didSelectMovie(movie: Movie)
+}
+
 class MovieCollectionTableCell: UITableViewCell {
     static let identifier = "MovieCell"
     private var movies: [Movie] = []
+    weak var delegate: MovieCollectionTableCellDelegate?
     
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -54,7 +59,6 @@ class MovieCollectionTableCell: UITableViewCell {
     }
 }
 
-// MARK: - CollectionView Delegate & DataSource
 extension MovieCollectionTableCell: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return movies.count
@@ -64,5 +68,9 @@ extension MovieCollectionTableCell: UICollectionViewDelegate, UICollectionViewDa
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "MovieCollectionViewCell", for: indexPath) as! MovieCollectionViewCell
         cell.configure(with: movies[indexPath.item])
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        delegate?.didSelectMovie(movie: movies[indexPath.item])
     }
 }

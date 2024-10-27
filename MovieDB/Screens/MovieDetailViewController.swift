@@ -43,7 +43,7 @@ class MovieDetailViewController: UIViewController {
     private let releaseDateTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Release Date"
+        label.text = Constants.releaseDate
         label.font = .systemFont(ofSize: 20, weight: .bold)
         return label
     }()
@@ -59,7 +59,7 @@ class MovieDetailViewController: UIViewController {
     private let genresTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Genres"
+        label.text = Constants.genres
         label.font = .systemFont(ofSize: 20, weight: .bold)
         return label
     }()
@@ -75,7 +75,7 @@ class MovieDetailViewController: UIViewController {
     private let plotTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Plot"
+        label.text = Constants.plot
         label.font = .systemFont(ofSize: 20, weight: .bold)
         return label
     }()
@@ -91,7 +91,7 @@ class MovieDetailViewController: UIViewController {
     private let castTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Cast"
+        label.text = Constants.cast
         label.font = .systemFont(ofSize: 20, weight: .bold)
         return label
     }()
@@ -107,7 +107,7 @@ class MovieDetailViewController: UIViewController {
     private let directorsTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Directors"
+        label.text = Constants.director
         label.font = .systemFont(ofSize: 20, weight: .bold)
         return label
     }()
@@ -141,15 +141,15 @@ class MovieDetailViewController: UIViewController {
     private let ratingsTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Ratings"
+        label.text = Constants.ratings
         label.font = .systemFont(ofSize: 20, weight: .bold)
         return label
     }()
     
-    private var movie: Movie
+    private let viewModel: MovieDetailViewModel
     
     init(movie: Movie) {
-        self.movie = movie
+        self.viewModel = MovieDetailViewModel(movie: movie)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -273,73 +273,38 @@ class MovieDetailViewController: UIViewController {
     }
     
     private func configureUI() {
-        titleLabel.text = movie.title
-        releaseDateLabel.text = movie.released
-        genresLabel.text = movie.genre
-        plotLabel.text = movie.plot
-        castLabel.text = movie.actors
-        directorsLabel.text = movie.director
-        loadImage(from: movie.poster)
+        titleLabel.text = viewModel.title
+        releaseDateLabel.text = viewModel.releaseDate
+        genresLabel.text = viewModel.genres
+        plotLabel.text = viewModel.plot
+        castLabel.text = viewModel.cast
+        directorsLabel.text = viewModel.directors
+        viewModel.loadImage { [weak self] image in
+            self?.posterImageView.image = image
+        }
         setupRatings()
     }
     
-    private func loadImage(from urlString: String) {
-        NetworkManager.shared.downloadImage(from: movie.poster) { [weak self] image in
-            guard let self = self else {
-                return
-            }
+    private func setupRatings() {
+        // Clear existing ratings first
+        horizontalRatingsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        horizontalRatingsStack.spacing = 16
+        horizontalRatingsStack.distribution = .equalSpacing
+        horizontalRatingsStack.alignment = .center
+        
+        let ratingViews = viewModel.getRatingViews()
+        
+        ratingViews.forEach { ratingDetails in
+            let hostingController = UIHostingController(rootView:
+                                                            RatingView(rating: ratingDetails)
+                .frame(width: 100, height: 140)
+                .preferredColorScheme(.dark)
+            )
+            hostingController.view.backgroundColor = .clear
             
-            DispatchQueue.main.async {
-                self.posterImageView.image = image ?? .placeholder
-            }
+            addChild(hostingController)
+            horizontalRatingsStack.addArrangedSubview(hostingController.view)
+            hostingController.didMove(toParent: self)
         }
     }
-    
-    private func setupRatings() {
-            // Clear existing ratings first
-            horizontalRatingsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-            horizontalRatingsStack.spacing = 16
-            horizontalRatingsStack.distribution = .equalSpacing
-            horizontalRatingsStack.alignment = .center
-            // Convert Movie ratings to RatingDetails
-            let ratingViews = movie.ratings.map { rating -> RatingDetails in
-                // Convert rating Value (e.g., "8.5/10" or "85%") to percentage
-                let percentage = convertRatingToPercentage(rating.value)
-                return RatingDetails(title: rating.source, percentage: percentage)
-            }
-            
-            // Add each rating view
-            ratingViews.forEach { ratingDetails in
-                let hostingController = UIHostingController(rootView:
-                    RatingView(rating: ratingDetails)
-                        .frame(width: 100, height: 140) // Adjust size as needed
-                        .preferredColorScheme(.dark)
-                )
-                hostingController.view.backgroundColor = .clear
-                
-                // Add the hosting controller as a child
-                addChild(hostingController)
-                horizontalRatingsStack.addArrangedSubview(hostingController.view)
-                hostingController.didMove(toParent: self)
-            }
-        }
-        
-        private func convertRatingToPercentage(_ ratingString: String) -> Double {
-            // Handle different rating formats
-            if ratingString.contains("/") {
-                // Format: "8.5/10"
-                let components = ratingString.split(separator: "/")
-                if let rating = Double(components[0]),
-                   let total = Double(components[1]) {
-                    return (rating / total) * 100
-                }
-            } else if ratingString.hasSuffix("%") {
-                // Format: "85%"
-                let numberString = ratingString.dropLast()
-                if let percentage = Double(numberString) {
-                    return percentage
-                }
-            }
-            return 0.0
-        }
 }

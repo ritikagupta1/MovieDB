@@ -21,7 +21,6 @@ final class NetworkManager {
             return
         }
         
-        
         guard let url = URL(string: urlString) else {
             completion(nil)
             return
@@ -36,7 +35,6 @@ final class NetworkManager {
                 completion(nil)
                 return
             }
-            
             
             self.imageCache.setObject(image, forKey: NSString(string: urlString))
             

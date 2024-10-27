@@ -18,12 +18,12 @@ struct RatingView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.5), lineWidth: 6)
+                    .stroke(Color.primary.opacity(0.5), lineWidth: 6)
                     .frame(width: 80, height: 100)
                 
                 Circle()
                     .trim(from: 0, to: rating.percentage/100)
-                    .stroke(Color.white, lineWidth: 6)
+                    .stroke(Color.primary, lineWidth: 6)
                     .rotationEffect(.degrees(-90))
                     .frame(width: 80, height: 100)
                 

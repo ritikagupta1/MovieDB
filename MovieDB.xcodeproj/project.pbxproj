@@ -26,6 +26,7 @@
 		B4FAAD5E2CCE846600355FFB /* MovieSearchResultCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAAD5D2CCE846500355FFB /* MovieSearchResultCell.swift */; };
 		B4FAAD612CCE9A8900355FFB /* MovieDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAAD602CCE9A8900355FFB /* MovieDetailViewController.swift */; };
 		B4FAAD632CCE9F9400355FFB /* RatingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAAD622CCE9F9400355FFB /* RatingsView.swift */; };
+		B4FAAD662CCEB03900355FFB /* MovieDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FAAD652CCEB03900355FFB /* MovieDetailViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +51,7 @@
 		B4FAAD5D2CCE846500355FFB /* MovieSearchResultCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieSearchResultCell.swift; sourceTree = "<group>"; };
 		B4FAAD602CCE9A8900355FFB /* MovieDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieDetailViewController.swift; sourceTree = "<group>"; };
 		B4FAAD622CCE9F9400355FFB /* RatingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingsView.swift; sourceTree = "<group>"; };
+		B4FAAD652CCEB03900355FFB /* MovieDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieDetailViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +149,7 @@
 			isa = PBXGroup;
 			children = (
 				B4FAAD592CCE450A00355FFB /* SearchViewModel.swift */,
+				B4FAAD652CCEB03900355FFB /* MovieDetailViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -248,6 +251,7 @@
 				B4FAAD632CCE9F9400355FFB /* RatingsView.swift in Sources */,
 				B4FAAD5A2CCE450A00355FFB /* SearchViewModel.swift in Sources */,
 				B4FAAD4E2CCD8DC000355FFB /* MovieCell.swift in Sources */,
+				B4FAAD662CCEB03900355FFB /* MovieDetailViewModel.swift in Sources */,
 				B4FAAD2E2CCCCB6F00355FFB /* SearchViewController.swift in Sources */,
 				B4FAAD5C2CCE4B6200355FFB /* OptionCell.swift in Sources */,
 				B4FAAD2A2CCCCB6F00355FFB /* AppDelegate.swift in Sources */,
